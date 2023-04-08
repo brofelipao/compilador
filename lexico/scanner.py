@@ -18,15 +18,11 @@ class Scanner():
     
     def __token(self, word, tipo):
         token: str
-        # try:
-        #     token = LALG[word]
-        #     return token
-        # except:
-        #     pass
-        if word in LALG:
+        try:
             token = LALG[word]
             return token
-        
+        except:
+            pass
         try:
             token = PONTOS[word]
             return token
@@ -118,6 +114,6 @@ class Scanner():
 
 
 if __name__ == '__main__':
-    scanner = Scanner('teste1.lalg')
+    scanner = Scanner('teste.lalg')
     scanner.readCode()
     tokens = scanner.getTokens(True)
