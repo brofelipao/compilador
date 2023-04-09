@@ -1,10 +1,9 @@
 from lexico.scanner import Scanner
-from sintatico.gramatica import gramatica
+from sintatico.parser import Parser
 
 if __name__ == '__main__':
     scanner = Scanner('testes/teste1.lalg')
     scanner.readCode()
-    tokens = scanner.getTokens()
+    tokens = scanner.getTokens(show=0)
 
-
-    print(gramatica)
+    parser = Parser(tokens)
