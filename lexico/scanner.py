@@ -1,6 +1,6 @@
 import re
-from linguagem import *
-from token import Token
+from .linguagem import *
+from .token import Token
 
 class Scanner():
     def __init__(self, path):
@@ -110,9 +110,3 @@ class Scanner():
                     else:
                         word += char
             c += 1
-
-
-if __name__ == '__main__':
-    scanner = Scanner('teste.lalg')
-    scanner.readCode()
-    tokens = scanner.getTokens(True)
