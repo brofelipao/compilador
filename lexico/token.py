@@ -1,6 +1,6 @@
 
 class Token():
-    def __init__(self, token, cadeia, status):
+    def __init__(self, token, cadeia, erro):
         self.token = token
         self.cadeia = cadeia
-        self.status = status
+        self.erro = erro

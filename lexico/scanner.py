@@ -20,33 +20,33 @@ class Scanner():
         token: str
         if word in LALG:
             token = LALG[word]
-            return token, 200
+            return token, False
         if word in PONTOS:
             token = PONTOS[word]
-            return token, 200
+            return token, False
         if word in OPERADORES:
             token = OPERADORES[word]
-            return token, 200
+            return token, False
         # Verifica se encaixa nas regras de identificador
         if re.fullmatch(r'[a-z+A-Z+]\w*', word):
-            return 'ident', 200
+            return 'ident', False
         # verifica se encaixa nas regras de número inteiro
         if re.fullmatch(r'\d+', word):
-            return 'num (int)', 200
+            return 'num (int)', False
         # Verifica se encaixa nas regras de número real
         if re.fullmatch(r'\d+.\d*', word):
-            return 'num (real)', 200
+            return 'num (real)', False
         # Caso não se encaixe em nada, retorna erro
-        return f'Erro, {tipo} não reconhecido.', 404
+        return f'Erro, {tipo} não reconhecido.', True
     
     def __defineToken(self, word, tipo):
-        token, status = self.__token(word, tipo)
-        self.cadeiaToken.append(Token(token, word, status))
+        token, erro = self.__token(word, tipo)
+        self.cadeiaToken.append(Token(token, word, erro))
 
     def getTokens(self, show = False):
         if show:
             for token in self.cadeiaToken:
-                print(token.cadeia, '-', token.token, token.status)
+                print(token.cadeia, '-', token.token, token.erro)
         return self.cadeiaToken
 
     # Automato que ira percorrer o codigo caracter por caracter
