@@ -1,3 +1,5 @@
+from lexico.linguagem import *
+
 RED = "\033[1;31m"
 RESET = "\033[0;0m"
 
@@ -5,6 +7,10 @@ class Parser:
     def __init__(self, tokens):
         self.estado = 0
         self.tokens = tokens
+        lalg = list(LALG.values())
+        pontos = list(PONTOS.values())
+        op = list(OPERADORES.values())
+        self.palavras_reservadas = lalg + pontos + op
         self.program()
 
     def program(self):
@@ -12,7 +18,6 @@ class Parser:
         if self.tokens[self.estado].token != 'program':
             self.error()
         self.consume()
-        # Verificacao identificador
         if not self.isident():
             self.error()
         self.consume()
@@ -84,7 +89,7 @@ class Parser:
                 self.error()
             self.consume()
             self.parametros()
-            if self.tokens[self.estado] != ';':
+            if self.tokens[self.estado].token != ';':
                 self.error()
             self.consume()
             self.corpo_p()
@@ -213,6 +218,12 @@ class Parser:
             self.consume()
             self.cmd()
             self.pfalsa()
+        elif self.tokens[self.estado].token == 'begin':
+            self.consume()
+            self.comandos()
+            if self.tokens[self.estado].token != 'end':
+                self.error()
+            self.consume()
         elif self.isident():
             self.consume()
             if self.tokens[self.estado].token == ':':
@@ -223,12 +234,6 @@ class Parser:
                 self.expressao()
             else:
                 self.lista_arg()
-        elif self.tokens[self.estado].token == 'begin':
-            self.consume()
-            self.comandos()
-            if self.tokens[self.estado].token != 'end':
-                self.error()
-            self.consume()
         else:
             self.error()
             self.consume()
@@ -302,7 +307,9 @@ class Parser:
         return True
 
     def isident(self):
-        return True
+        if self.tokens[self.estado].cadeia not in self.palavras_reservadas:
+            return True
+        return False
 
     def error(self, msg = 'Erro'):
         if msg == 'Erro':
