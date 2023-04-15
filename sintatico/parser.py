@@ -13,7 +13,9 @@ class Parser:
             self.error()
         self.consume()
         # Verificacao identificador
-        self.isident()
+        if not self.isident():
+            self.error()
+        self.consume()
         if self.tokens[self.estado].token != ';':
             self.error()
         self.consume()
@@ -62,12 +64,10 @@ class Parser:
             self.consume()
 
     def variaveis(self):
-        if self.tokens[self.estado].token == 'ident':
-            self.consume()
-            self.mais_var()
-        else:
+        if not self.isident():
             self.error()
-            self.consume()
+        self.consume()
+        self.mais_var()
 
     def mais_var(self):
         if self.tokens[self.estado].token == ',':
@@ -80,19 +80,15 @@ class Parser:
     def dc_p(self):
         if self.tokens[self.estado].token == 'procedure':
             self.consume()
-            if self.tokens[self.estado] == 'ident':
-                self.consume()
-                self.parametros()
-                if self.tokens[self.estado] == ';':
-                    self.consume()
-                    self.corpo_p()
-                    self.dc_p()
-                else:
-                    self.error()
-                    self.consume()
-            else:
+            if not self.isident():
                 self.error()
-                self.consume()
+            self.consume()
+            self.parametros()
+            if self.tokens[self.estado] != ';':
+                self.error()
+            self.consume()
+            self.corpo_p()
+            self.dc_p()
         # Vazio
         else:
             pass
@@ -156,7 +152,7 @@ class Parser:
             pass
 
     def argumentos(self):
-        if self.tokens[self.estado].token != 'ident':
+        if not self.isident():
             self.error()
         self.consume()
         self.mais_ident()
@@ -170,50 +166,147 @@ class Parser:
             pass
 
     def pfalsa(self):
-        pass
+        if self.tokens[self.estado].token == 'else':
+            self.consume()
+            self.cmd()
+        else:
+            pass
 
     def comandos(self):
-        pass
+        self.cmd()
+        if self.tokens[self.estado].token != ';':
+            self.error()
+        self.consume()
+        self.comandos()
 
     def cmd(self):
-        pass
+        if self.tokens[self.estado].token == 'read':
+            self.consume()
+            if self.tokens[self.estado].token != '(':
+                self.error()
+            self.consume()
+            self.variaveis()
+            if self.tokens[self.estado].token != ')':
+                self.error()
+            self.consume()
+        elif self.tokens[self.estado].token == 'write':
+            self.consume()
+            if self.tokens[self.estado].token != '(':
+                self.error()
+            self.consume()
+            self.variaveis()
+            if self.tokens[self.estado].token != ')':
+                self.error()
+            self.consume()
+        elif self.tokens[self.estado].token == 'while':
+            self.consume()
+            self.condicao()
+            if self.tokens[self.estado].token != 'do':
+                self.error()
+            self.consume()
+            self.cmd()
+        elif self.tokens[self.estado].token == 'if':
+            self.consume()
+            self.condicao()
+            if self.tokens[self.estado].token != 'then':
+                self.error()
+            self.consume()
+            self.cmd()
+            self.pfalsa()
+        elif self.isident():
+            self.consume()
+            if self.tokens[self.estado].token == ':':
+                self.consume()
+                if self.tokens[self.estado].token != '=':
+                    self.error()
+                self.consume()
+                self.expressao()
+            else:
+                self.lista_arg()
+        elif self.tokens[self.estado].token == 'begin':
+            self.consume()
+            self.comandos()
+            if self.tokens[self.estado].token != 'end':
+                self.error()
+            self.consume()
+        else:
+            self.error()
+            self.consume()
 
     def condicao(self):
-        pass
+        self.expressao()
+        self.relacao()
+        self.expressao()
 
     def relacao(self):
-        pass
+        if self.tokens[self.estado].token not in ('=', '<>', '>=', '<=', '>', '<'):
+            self.error()
+        self.consume()
 
     def expressao(self):
-        pass
+        self.termo()
+        self.outros_termos()
 
     def op_un(self):
-        pass
+        if self.tokens[self.estado].token in ('+', '-'):
+            self.consume()
+        else:
+            pass
 
     def outros_termos(self):
-        pass
+        if self.tokens[self.estado].token in ('+', '-'):
+            self.op_ad()
+            self.termo()
+            self.outros_termos()
+        else:
+            pass
 
     def op_ad(self):
-        pass
+        if self.tokens[self.estado].token not in ('+', '-'):
+            self.error()
+        self.consume()
 
     def termo(self):
-        pass
+        self.op_un()
+        self.fator()
+        self.mais_fatores()
 
     def mais_fatores(self):
-        pass
+        if self.tokens[self.estado].token in ('*', '/'):
+            self.op_mul()
+            self.fator()
+            self.mais_fatores()
+        else:
+            pass
 
     def op_mul(self):
-        pass
+        if self.tokens[self.estado].token not in ('*', '/'):
+            self.error()
+        self.consume()
 
     def fator(self):
-        pass
+        if self.isident():
+            self.consume()
+        elif self.numero_int():
+            self.consume()
+        elif self.numero_real:
+            self.consume()
+        else:
+            self.error()
+            self.consume()
+
+    def numero_int(self):
+        return True
+
+    def numero_real(self):
+        return True
 
     def isident(self):
-        self.consume()
+        return True
 
     def error(self, msg = 'Erro'):
         if msg == 'Erro':
-            msg = msg + self.tokens[self.estado].token
+            msg = msg + ': ' + self.tokens[self.estado].token
         print(RED + msg + RESET)
     
     def consume(self):
