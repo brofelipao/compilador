@@ -112,14 +112,17 @@ class Parser:
             pass
 
     def lista_par(self):
-        self.variaveis()
-        if self.tokens[self.estado].token == ':':
-            self.consume()
-            self.tipo_var()
-            self.mais_var()
+        if self.tokens[self.estado].token == 'ident':
+            self.variaveis()
+            if self.tokens[self.estado].token == ':':
+                self.consume()
+                self.tipo_var()
+                self.mais_var()
+            else:
+                self.error()
+                self.consume()
         else:
-            self.error()
-            self.consume()
+            pass
 
     def mais_par(self):
         if self.tokens[self.estado].token == ';':
@@ -178,11 +181,14 @@ class Parser:
             pass
 
     def comandos(self):
-        self.cmd()
-        if self.tokens[self.estado].token != ';':
-            self.error()
-        self.consume()
-        self.comandos()
+        if self.tokens[self.estado].token in ('read', 'write', 'while', 'if', 'ident', 'begin'):
+            self.cmd()
+            if self.tokens[self.estado].token != ';':
+                self.error()
+            self.consume()
+            self.comandos()
+        else:
+            pass
 
     def cmd(self):
         if self.tokens[self.estado].token == 'read':
@@ -296,6 +302,12 @@ class Parser:
             self.consume()
         elif self.numero_real:
             self.consume()
+        elif self.tokens[self.estado].token == '(':
+            self.consume()
+            self.expressao()
+            if self.tokens[self.estado].token != ')':
+                self.error()
+            self.consume()
         else:
             self.error()
             self.consume()
@@ -307,16 +319,20 @@ class Parser:
         return True
 
     def isident(self):
-        if self.tokens[self.estado].cadeia not in self.palavras_reservadas:
+        print(self.tokens[self.estado].cadeia, self.tokens[self.estado].erro, self.tokens[self.estado].token)
+        token = self.tokens[self.estado]
+        if bool(token.erro):
+            return False
+        if token.cadeia not in self.palavras_reservadas:
             return True
         return False
 
     def error(self, msg = 'Erro'):
         if msg == 'Erro':
-            msg = msg + ': ' + self.tokens[self.estado].token
+            msg = msg + ': ' + self.tokens[self.estado].cadeia + ' na linha ' + str(self.tokens[self.estado].linha)
         print(RED + msg + RESET)
     
     def consume(self):
-        print(self.tokens[self.estado].token)
+        print(self.tokens[self.estado].cadeia)
         self.estado += 1
 

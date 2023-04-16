@@ -7,6 +7,7 @@ class Scanner():
         self.codigo = self.__readFile(path)
         self.state = 0
         self.cadeiaToken = []
+        self.linha = 1
         self.isspace = lambda x: re.match(r'[ \t\n\r\f\v]', x)
         self.isoperator = lambda x: re.match(r'[=|>|<]', x)
 
@@ -37,11 +38,11 @@ class Scanner():
         if re.fullmatch(r'\d+.\d*', word):
             return 'num (real)', False
         # Caso não se encaixe em nada, retorna erro
-        return f'Erro, {tipo} não reconhecido.', True
+        return f'Erro, {tipo} não reconhecido na linha {self.linha}.', True
     
     def __defineToken(self, word, tipo):
         token, erro = self.__token(word, tipo)
-        self.cadeiaToken.append(Token(token, word, erro))
+        self.cadeiaToken.append(Token(token, word, erro, self.linha))
 
     def getTokens(self, show = False):
         if show:
@@ -67,7 +68,8 @@ class Scanner():
                         self.state = 4
                         word += char
                     elif self.isspace(char):
-                        pass
+                        if char == '\n':
+                            self.linha += 1
                     elif not char.isalnum():
                         self.__defineToken(char, 'pontuação')
                 case 1:
