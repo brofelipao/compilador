@@ -42,7 +42,7 @@ class Scanner():
     
     def __defineToken(self, word, tipo):
         token, erro = self.__token(word, tipo)
-        self.cadeiaToken.append(Token(token, word, erro, self.linha))
+        self.cadeiaToken.append(Token(token=token, cadeia=word, erro=erro, linha=self.linha))
 
     def getTokens(self, show = False):
         if show:

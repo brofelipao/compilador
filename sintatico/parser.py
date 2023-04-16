@@ -224,12 +224,6 @@ class Parser:
             self.consume()
             self.cmd()
             self.pfalsa()
-        elif self.tokens[self.estado].token == 'begin':
-            self.consume()
-            self.comandos()
-            if self.tokens[self.estado].token != 'end':
-                self.error()
-            self.consume()
         elif self.isident():
             self.consume()
             if self.tokens[self.estado].token == ':':
@@ -240,6 +234,12 @@ class Parser:
                 self.expressao()
             else:
                 self.lista_arg()
+        elif self.tokens[self.estado].token == 'begin':
+            self.consume()
+            self.comandos()
+            if self.tokens[self.estado].token != 'end':
+                self.error()
+            self.consume()
         else:
             self.error()
             self.consume()
@@ -319,9 +319,9 @@ class Parser:
         return True
 
     def isident(self):
-        print(self.tokens[self.estado].cadeia, self.tokens[self.estado].erro, self.tokens[self.estado].token)
+        #print(self.tokens[self.estado].cadeia, self.tokens[self.estado].erro, self.tokens[self.estado].token)
         token = self.tokens[self.estado]
-        if bool(token.erro):
+        if token.erro:
             return False
         if token.cadeia not in self.palavras_reservadas:
             return True
@@ -329,7 +329,7 @@ class Parser:
 
     def error(self, msg = 'Erro'):
         if msg == 'Erro':
-            msg = msg + ': ' + self.tokens[self.estado].cadeia + ' na linha ' + str(self.tokens[self.estado].linha)
+            msg = msg + ': ' + self.tokens[self.estado].cadeia #+ ' na linha ' + str(self.tokens[self.estado].linha)
         print(RED + msg + RESET)
     
     def consume(self):
