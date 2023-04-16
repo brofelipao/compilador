@@ -12,7 +12,7 @@ begin
         a:= c+x; 
         write(a); 
         end 
-    else c:= a+x?1231; 
+    else c:= a++x?1231; 
         end;
     begin {programa principal} 
     read(b); 

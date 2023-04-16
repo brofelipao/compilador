@@ -1,4 +1,5 @@
 from lexico.linguagem import *
+import re
 
 RED = "\033[1;31m"
 RESET = "\033[0;0m"
@@ -7,6 +8,8 @@ class Parser:
     def __init__(self, tokens):
         self.estado = 0
         self.tokens = tokens
+        self.linhas = ['' for i in range(len(tokens))]
+        self.erros = []
         lalg = list(LALG.values())
         pontos = list(PONTOS.values())
         op = list(OPERADORES.values())
@@ -16,27 +19,30 @@ class Parser:
     def program(self):
         # Verificacao palavra reservada program
         if self.tokens[self.estado].token != 'program':
-            self.error()
+            self.error('program')
         self.consume()
         if not self.isident():
-            self.error()
+            self.error('identificador válido')
         self.consume()
         if self.tokens[self.estado].token != ';':
-            self.error()
+            self.error(';')
         self.consume()
         self.corpo()
         if self.tokens[self.estado].token != '.':
-            self.error()
+            self.error('.')
+        else:
+            self.consume()
         # Aqui nao muda estado pois o programa acaba
-        
+        self.resultado()
+ 
     def corpo(self):
         self.dc()
         if self.tokens[self.estado].token != 'begin':
-            self.error()
+            self.error('begin')
         self.consume()
         self.comandos()
         if self.tokens[self.estado].token != 'end':
-            self.error()
+            self.error('end')
         self.consume()
 
     def dc(self):
@@ -48,11 +54,11 @@ class Parser:
             self.consume()
             self.variaveis()
             if self.tokens[self.estado].token != ':':
-                self.error()
+                self.error(':')
             self.consume()
             self.tipo_var()
             if self.tokens[self.estado].token != ';':
-                self.error()
+                self.error(';')
             self.consume()
             self.dc_v()
         # Vazio
@@ -65,12 +71,12 @@ class Parser:
         elif self.tokens[self.estado].token == 'integer':
             self.consume()
         else:
-            self.error()
+            self.error('real ou integer')
             self.consume()
 
     def variaveis(self):
         if not self.isident():
-            self.error()
+            self.error('identificador válido')
         self.consume()
         self.mais_var()
 
@@ -86,11 +92,11 @@ class Parser:
         if self.tokens[self.estado].token == 'procedure':
             self.consume()
             if not self.isident():
-                self.error()
+                self.error('identificador válido')
             self.consume()
             self.parametros()
             if self.tokens[self.estado].token != ';':
-                self.error()
+                self.error(';')
             self.consume()
             self.corpo_p()
             self.dc_p()
@@ -102,11 +108,9 @@ class Parser:
         if self.tokens[self.estado].token == '(':
             self.consume()
             self.lista_par()
-            if self.tokens[self.estado].token == ')':
-                self.consume()
-            else:
-                self.error()
-                self.consume()
+            if self.tokens[self.estado].token != ')':
+                self.error(')')
+            self.consume()
         # Vazio
         else:
             pass
@@ -114,13 +118,11 @@ class Parser:
     def lista_par(self):
         if self.tokens[self.estado].token == 'ident':
             self.variaveis()
-            if self.tokens[self.estado].token == ':':
-                self.consume()
-                self.tipo_var()
-                self.mais_var()
-            else:
-                self.error()
-                self.consume()
+            if self.tokens[self.estado].token != ':':
+                self.error(':')
+            self.consume()
+            self.tipo_var()
+            self.mais_var()
         else:
             pass
 
@@ -135,14 +137,14 @@ class Parser:
     def corpo_p(self):
         self.dc_loc()
         if self.tokens[self.estado].token != 'begin':
-            self.error()
+            self.error('begin')
         self.consume()
         self.comandos()
         if self.tokens[self.estado].token != 'end':
-            self.error()
+            self.error('end')
         self.consume()
         if self.tokens[self.estado].token != ';':
-            self.error()
+            self.error(';')
         self.consume()
 
     def dc_loc(self):
@@ -153,7 +155,7 @@ class Parser:
             self.consume()
             self.argumentos()
             if self.tokens[self.estado].token != ')':
-                self.error()
+                self.error(')')
             self.consume()
         # Vazio
         else:
@@ -161,7 +163,7 @@ class Parser:
 
     def argumentos(self):
         if not self.isident():
-            self.error()
+            self.error('identificador válido')
         self.consume()
         self.mais_ident()
 
@@ -184,7 +186,7 @@ class Parser:
         if self.tokens[self.estado].token in ('read', 'write', 'while', 'if', 'ident', 'begin'):
             self.cmd()
             if self.tokens[self.estado].token != ';':
-                self.error()
+                self.error(';')
             self.consume()
             self.comandos()
         else:
@@ -194,33 +196,33 @@ class Parser:
         if self.tokens[self.estado].token == 'read':
             self.consume()
             if self.tokens[self.estado].token != '(':
-                self.error()
+                self.error('(')
             self.consume()
             self.variaveis()
             if self.tokens[self.estado].token != ')':
-                self.error()
+                self.error(')')
             self.consume()
         elif self.tokens[self.estado].token == 'write':
             self.consume()
             if self.tokens[self.estado].token != '(':
-                self.error()
+                self.error('(')
             self.consume()
             self.variaveis()
             if self.tokens[self.estado].token != ')':
-                self.error()
+                self.error(')')
             self.consume()
         elif self.tokens[self.estado].token == 'while':
             self.consume()
             self.condicao()
             if self.tokens[self.estado].token != 'do':
-                self.error()
+                self.error('do')
             self.consume()
             self.cmd()
         elif self.tokens[self.estado].token == 'if':
             self.consume()
             self.condicao()
             if self.tokens[self.estado].token != 'then':
-                self.error()
+                self.error('then')
             self.consume()
             self.cmd()
             self.pfalsa()
@@ -229,7 +231,7 @@ class Parser:
             if self.tokens[self.estado].token == ':':
                 self.consume()
                 if self.tokens[self.estado].token != '=':
-                    self.error()
+                    self.error('=')
                 self.consume()
                 self.expressao()
             else:
@@ -238,10 +240,10 @@ class Parser:
             self.consume()
             self.comandos()
             if self.tokens[self.estado].token != 'end':
-                self.error()
+                self.error('end')
             self.consume()
         else:
-            self.error()
+            self.error('read, write, while, if, ident ou begin')
             self.consume()
 
     def condicao(self):
@@ -251,7 +253,7 @@ class Parser:
 
     def relacao(self):
         if self.tokens[self.estado].token not in ('=', '<>', '>=', '<=', '>', '<'):
-            self.error()
+            self.error('operador de comparação')
         self.consume()
 
     def expressao(self):
@@ -274,7 +276,7 @@ class Parser:
 
     def op_ad(self):
         if self.tokens[self.estado].token not in ('+', '-'):
-            self.error()
+            self.error('operador matemático')
         self.consume()
 
     def termo(self):
@@ -292,7 +294,7 @@ class Parser:
 
     def op_mul(self):
         if self.tokens[self.estado].token not in ('*', '/'):
-            self.error()
+            self.error('operador matemático')
         self.consume()
 
     def fator(self):
@@ -300,23 +302,27 @@ class Parser:
             self.consume()
         elif self.numero_int():
             self.consume()
-        elif self.numero_real:
+        elif self.numero_real():
             self.consume()
         elif self.tokens[self.estado].token == '(':
             self.consume()
             self.expressao()
             if self.tokens[self.estado].token != ')':
-                self.error()
+                self.error(')')
             self.consume()
         else:
-            self.error()
+            self.error('identificador válido ou número')
             self.consume()
 
     def numero_int(self):
-        return True
+        if re.fullmatch(r'\d+', self.tokens[self.estado].cadeia):
+            return True
+        return False
 
     def numero_real(self):
-        return True
+        if re.fullmatch(r'\d+.\d*', self.tokens[self.estado].cadeia):
+            return True
+        return False
 
     def isident(self):
         #print(self.tokens[self.estado].cadeia, self.tokens[self.estado].erro, self.tokens[self.estado].token)
@@ -327,12 +333,28 @@ class Parser:
             return True
         return False
 
-    def error(self, msg = 'Erro'):
-        if msg == 'Erro':
-            msg = msg + ': ' + self.tokens[self.estado].cadeia #+ ' na linha ' + str(self.tokens[self.estado].linha)
-        print(RED + msg + RESET)
+    def error(self, msg = None):
+        if msg == None:
+            msg = f'Erro: {self.tokens[self.estado].cadeia} na linha {self.tokens[self.estado].linha}'
+        else:
+            msg = f'Erro: Esperava {msg} recebeu {self.tokens[self.estado].cadeia} na linha {self.tokens[self.estado].linha}'
+        self.erros.append(RED + msg + RESET)
+        self.tokens[self.estado].erro = True
     
     def consume(self):
-        print(self.tokens[self.estado].cadeia)
+        token = self.tokens[self.estado]
+        msg = token.cadeia
+        if token.erro:
+            msg = RED + msg + RESET
+        if len(self.linhas[token.linha]) > 0:
+            msg = ' ' + msg
+        self.linhas[token.linha] += msg
+        #print(msg)
         self.estado += 1
+
+    def resultado(self):
+        cod = '\n'.join(list(filter(len, self.linhas))).strip()
+        print(cod)
+        erros = '\n'.join(self.erros).strip()
+        print(erros)
 
