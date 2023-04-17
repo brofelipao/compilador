@@ -9,7 +9,7 @@ a1:= a + b;
 while a1>a do
 begin
 write(a1);
-a1:= a1--1;
+a1:= a1**1;
 end;
 ! a<> b then write(a);
 end.

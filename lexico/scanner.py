@@ -74,7 +74,7 @@ class Scanner():
                         self.__defineToken(char, 'pontuação')
                 case 1:
                     # caso 1: identificador
-                    if re.match(r'\W', char) or self.isspace(char):
+                    if re.match(r'[.|,|;|:|(|)|=|<|>|+|-|/|*|-]', char) or self.isspace(char):
                         self.__defineToken(word, 'identificador')
                         word = ''
                         self.state = 0
@@ -86,7 +86,7 @@ class Scanner():
                     if char == '.':
                         word += char
                         self.state = 3
-                    elif (not char.isalnum() and re.match(r'\W', char)) or self.isspace(char):
+                    elif (not char.isalnum() and re.match(r'[.|,|;|:|(|)|=|<|>|+|-|/|*|-]', char)) or self.isspace(char):
                         self.__defineToken(word, 'número inteiro')
                         word = ''
                         self.state = 0
@@ -95,7 +95,7 @@ class Scanner():
                         word += char
                 case 3:
                     # caso 3: flutuante
-                    if (not char.isalnum() and re.match(r'\W', char)) or self.isspace(char):
+                    if (not char.isalnum() and re.match(r'[.|,|;|:|(|)|=|<|>|+|-|/|*|-]', char)) or self.isspace(char):
                         self.__defineToken(word, 'número real')
                         word = ''
                         self.state = 0
