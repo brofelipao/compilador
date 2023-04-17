@@ -10,6 +10,7 @@ class Parser:
         self.tokens = tokens
         self.linhas = ['' for i in range(len(tokens))]
         self.erros = []
+        self.variaveislist = []
         lalg = list(LALG.values())
         pontos = list(PONTOS.values())
         op = list(OPERADORES.values())
@@ -21,8 +22,8 @@ class Parser:
         if self.tokens[self.estado].token != 'program':
             self.error('program')
         self.consume()
-        if not self.isident():
-            self.error('identificador válido')
+        if not self.isident(nova_variavel=True):
+            self.error('var')
         self.consume()
         if self.tokens[self.estado].token != ';':
             self.error(';')
@@ -32,6 +33,10 @@ class Parser:
             self.error('.')
         else:
             self.consume()
+        if self.estado < len(self.tokens):
+            for i in range(self.estado, len(self.tokens)):
+                self.error('out')
+                self.consume()
         # Aqui nao muda estado pois o programa acaba
         self.resultado()
  
@@ -75,8 +80,8 @@ class Parser:
             self.consume()
 
     def variaveis(self):
-        if not self.isident():
-            self.error('identificador válido')
+        if not self.isident(nova_variavel=True):
+            self.error('var')
         self.consume()
         self.mais_var()
 
@@ -91,8 +96,8 @@ class Parser:
     def dc_p(self):
         if self.tokens[self.estado].token == 'procedure':
             self.consume()
-            if not self.isident():
-                self.error('identificador válido')
+            if not self.isident(nova_variavel=True):
+                self.error('var')
             self.consume()
             self.parametros()
             if self.tokens[self.estado].token != ';':
@@ -163,7 +168,7 @@ class Parser:
 
     def argumentos(self):
         if not self.isident():
-            self.error('identificador válido')
+            self.error('var')
         self.consume()
         self.mais_ident()
 
@@ -311,7 +316,7 @@ class Parser:
                 self.error(')')
             self.consume()
         else:
-            self.error('identificador válido ou número')
+            self.error('identificador ou número inválidos')
             self.consume()
 
     def numero_int(self):
@@ -324,20 +329,30 @@ class Parser:
             return True
         return False
 
-    def isident(self):
+    def isident(self, nova_variavel = False):
         #print(self.tokens[self.estado].cadeia, self.tokens[self.estado].erro, self.tokens[self.estado].token)
         token = self.tokens[self.estado]
+        r = False
         if token.erro:
             return False
         if token.cadeia not in self.palavras_reservadas:
-            return True
-        return False
+            r = True
+        if nova_variavel:
+            self.variaveislist.append(token.cadeia)
+        elif token.cadeia not in self.variaveislist:
+            r = False
+        return r
 
     def error(self, msg = None):
         if msg == None:
             msg = f'Erro: {self.tokens[self.estado].cadeia} na linha {self.tokens[self.estado].linha}'
+        elif msg == 'out':
+            msg = f'Erro: o {self.tokens[self.estado].cadeia} está fora do escopo da função main.'
+        elif msg == 'var':
+            msg = f'Identificador {self.tokens[self.estado].cadeia} inválido ou inexistente.'
         else:
             msg = f'Erro: Esperava {msg} recebeu {self.tokens[self.estado].cadeia} na linha {self.tokens[self.estado].linha}'
+        
         self.erros.append(RED + msg + RESET)
         self.tokens[self.estado].erro = True
     
