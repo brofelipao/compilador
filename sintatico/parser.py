@@ -3,6 +3,9 @@ import re
 
 RED = "\033[1;31m"
 RESET = "\033[0;0m"
+lalg = list(LALG.values())
+pontos = list(PONTOS.values())
+op = list(OPERADORES.values())
 
 class Parser:
     def __init__(self, tokens):
@@ -11,9 +14,6 @@ class Parser:
         self.linhas = ['' for i in range(len(tokens))]
         self.erros = []
         self.variaveislist = []
-        lalg = list(LALG.values())
-        pontos = list(PONTOS.values())
-        op = list(OPERADORES.values())
         self.palavras_reservadas = lalg + pontos + op
         self.program()
     
@@ -35,10 +35,8 @@ class Parser:
             self.error('.')
         else:
             self.consume()
-        # if self.estado < len(self.tokens):
-        #     for i in range(self.estado, len(self.tokens)):
-        #         self.error('out')
-        #         self.consume()
+        if self.estado < len(self.tokens):
+            print(RED + 'Processo finalizado pois as regras não foram capazes de reconhecer a cadeia.' + RESET)
         # Aqui nao muda estado pois o programa acaba
         self.resultado()
  
@@ -297,7 +295,7 @@ class Parser:
             self.match(')')
             self.consume()
         else:
-            self.error('identificador ou número inválidos')
+            self.error('var')
             self.consume()
 
     def numero_int(self):
@@ -315,8 +313,8 @@ class Parser:
         token = self.tokens[self.estado]
         r = False
         if token.erro:
-            return False
-        if token.cadeia not in self.palavras_reservadas:
+            return r
+        if token.cadeia not in self.palavras_reservadas and token.token == 'ident':
             r = True
         if nova_variavel:
             self.variaveislist.append(token.cadeia)
@@ -340,17 +338,24 @@ class Parser:
     def consume(self):
         token = self.tokens[self.estado]
         msg = token.cadeia
+        l = token.linha
+        r = self.estado
+        s = 1
         if token.erro:
             msg = RED + msg + RESET
+            while self.tokens[r].linha < (l + 1):
+                r += 1
+            self.estado = r
         if len(self.linhas[token.linha]) > 0:
             msg = ' ' + msg
         self.linhas[token.linha] += msg
         print(msg)
-        self.estado += 1
+        self.estado += s
+        return token.erro
 
     def resultado(self):
         cod = '\n'.join(list(filter(len, self.linhas))).strip()
-        print(cod)
+        #print(cod)
         erros = '\n'.join(self.erros).strip()
         print(erros)
 
