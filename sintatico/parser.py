@@ -3,6 +3,9 @@ import re
 
 RED = "\033[1;31m"
 RESET = "\033[0;0m"
+REDN = '\033[31m'
+GREEN = "\033[1;32m"
+
 lalg = list(LALG.values())
 pontos = list(PONTOS.values())
 op = list(OPERADORES.values())
@@ -37,6 +40,9 @@ class Parser:
             self.consume()
         if self.estado < len(self.tokens):
             print(RED + 'Processo finalizado pois as regras não foram capazes de reconhecer a cadeia.' + RESET)
+            while self.estado < len(self.tokens):
+                self.tokens[self.estado].erro = True
+                self.consume()
         # Aqui nao muda estado pois o programa acaba
         self.resultado()
  
@@ -338,24 +344,19 @@ class Parser:
     def consume(self):
         token = self.tokens[self.estado]
         msg = token.cadeia
-        l = token.linha
-        r = self.estado
-        s = 1
         if token.erro:
-            msg = RED + msg + RESET
-            while self.tokens[r].linha < (l + 1):
-                r += 1
-            self.estado = r
+            msg = REDN + msg + RESET
         if len(self.linhas[token.linha]) > 0:
             msg = ' ' + msg
         self.linhas[token.linha] += msg
-        print(msg)
-        self.estado += s
-        return token.erro
+        #print(msg)
+        self.estado += 1
 
     def resultado(self):
         cod = '\n'.join(list(filter(len, self.linhas))).strip()
-        #print(cod)
+        print(cod)
+        if len(self.erros) == 0:
+            print(GREEN + 'Não foram encontrados erros.' + RESET)    
         erros = '\n'.join(self.erros).strip()
         print(erros)
 
